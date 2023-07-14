@@ -61,6 +61,7 @@ def test_real_all_summaries(test_app_with_db: TestClient):
     response_list = response.json()
     assert len(list(filter(lambda d: d["id"] == summary_id, response_list))) == 1
 
+
 def test_remove_summary(test_app_with_db: TestClient):
     response: Response = test_app_with_db.post(
         SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
@@ -70,6 +71,7 @@ def test_remove_summary(test_app_with_db: TestClient):
     response = test_app_with_db.delete(f"{SUMMARIES_ENDPOINT}/{summary_id}")
     assert response.status_code == 200
     assert response.json() == {"id": summary_id, "url": "https://foo.bar"}
+
 
 def test_remove_summary_incorrect_id(test_app_with_db: TestClient):
     response: Response = test_app_with_db.delete(f"{SUMMARIES_ENDPOINT}/999")
