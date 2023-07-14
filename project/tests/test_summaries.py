@@ -33,7 +33,7 @@ def test_read_summary(test_app_with_db: TestClient):
     )
     summary_id = response.json()["id"]
 
-    response = test_app_with_db.get(f"{SUMMARIES_ENDPOINT}/shanur/{summary_id}")
+    response = test_app_with_db.get(f"{SUMMARIES_ENDPOINT}/{summary_id}")
     response_dict = response.json()
 
     assert response.status_code == 200
@@ -44,7 +44,7 @@ def test_read_summary(test_app_with_db: TestClient):
 
 
 def test_read_summary_incorrect_id(test_app_with_db: TestClient):
-    response: Response = test_app_with_db.get(f"{SUMMARIES_ENDPOINT}/shanur/999/")
+    response: Response = test_app_with_db.get(f"{SUMMARIES_ENDPOINT}/999/")
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
 
