@@ -81,14 +81,13 @@ def test_remove_summary_incorrect_id(test_app_with_db: TestClient):
 
 def test_update_summary(test_app_with_db: TestClient):
     response: Response = test_app_with_db.post(
-        SUMMARIES_ENDPOINT,
-        json={"url": "https://foo.bar"}
+        SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )
 
     summary_id = response.json()["id"]
     response = test_app_with_db.put(
         f"{SUMMARIES_ENDPOINT}/{summary_id}",
-        json={"url": "https://new-foo.bar", "summary": "updated!"}
+        json={"url": "https://new-foo.bar", "summary": "updated!"},
     )
 
     assert response.status_code == 200
@@ -102,7 +101,7 @@ def test_update_summary(test_app_with_db: TestClient):
 def test_update_summary_incorrect_id(test_app_with_db: TestClient):
     response: Response = test_app_with_db.put(
         f"{SUMMARIES_ENDPOINT}/999/",
-        json={"url": "https://foo.bar", "summary": "updated!"}
+        json={"url": "https://foo.bar", "summary": "updated!"},
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
@@ -110,15 +109,11 @@ def test_update_summary_incorrect_id(test_app_with_db: TestClient):
 
 def test_update_summary_invalid_json(test_app_with_db: TestClient):
     response: Response = test_app_with_db.post(
-        SUMMARIES_ENDPOINT,
-        json={"url": "https://foo.bar"}
+        SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )
     sumamry_id = response.json()["id"]
 
-    response = test_app_with_db.put(
-        f"{SUMMARIES_ENDPOINT}/{sumamry_id}",
-        json={}
-    )
+    response = test_app_with_db.put(f"{SUMMARIES_ENDPOINT}/{sumamry_id}", json={})
 
     assert response.status_code == 422
     assert response.json() == {
@@ -132,21 +127,19 @@ def test_update_summary_invalid_json(test_app_with_db: TestClient):
                 "loc": ["body", "summary"],
                 "msg": "field required",
                 "type": "value_error.missing",
-            }
+            },
         ]
     }
 
 
 def test_update_summary_invalid_keys(test_app_with_db: TestClient):
     response: Response = test_app_with_db.post(
-        SUMMARIES_ENDPOINT,
-        json={"url": "https://foo.bar"}
+        SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )
     summary_id = response.json()["id"]
 
     response = test_app_with_db.put(
-        f"{SUMMARIES_ENDPOINT}/{summary_id}/",
-        json={"url": "https://new-foo.bar"}
+        f"{SUMMARIES_ENDPOINT}/{summary_id}/", json={"url": "https://new-foo.bar"}
     )
 
     assert response.status_code == 422

@@ -29,7 +29,9 @@ async def delete(id: int) -> int:
 
 
 async def update(id: int, payload: SummaryPayloadSchema) -> dict | None:
-    summary = await TextSummary.filter(id=id).update(url=payload.url, summary=payload.summary)
+    summary = await TextSummary.filter(id=id).update(
+        url=payload.url, summary=payload.summary
+    )
     if summary:
         updated_summary = await TextSummary.filter(id=id).first().values()
         return updated_summary
