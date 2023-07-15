@@ -13,7 +13,9 @@ def test_create_summary(test_app_with_db: TestClient):
     assert response.json()["url"] == "https://foo.bar"
 
 
-def test_create_summary_invalid_json(test_app: TestClient):
+def test_create_summary_invalid_json(
+    test_app: TestClient, test_app_with_db: TestClient
+):
     response: Response = test_app.post(SUMMARIES_ENDPOINT, json={})
     assert response.status_code == 422
     assert response.json() == {
@@ -25,6 +27,10 @@ def test_create_summary_invalid_json(test_app: TestClient):
             }
         ]
     }
+
+    response = test_app_with_db.post(SUMMARIES_ENDPOINT, json={"url": "invalid://url"})
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"] == "URL scheme not permitted"
 
 
 def test_read_summary(test_app_with_db: TestClient):
@@ -47,6 +53,19 @@ def test_read_summary_incorrect_id(test_app_with_db: TestClient):
     response: Response = test_app_with_db.get(f"{SUMMARIES_ENDPOINT}/999/")
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
+
+    response = test_app_with_db.get(f"{SUMMARIES_ENDPOINT}/0/")
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "loc": ["path", "id"],
+                "msg": "ensure this value is greater than 0",
+                "type": "value_error.number.not_gt",
+                "ctx": {"limit_value": 0},
+            }
+        ]
+    }
 
 
 def test_real_all_summaries(test_app_with_db: TestClient):
@@ -78,6 +97,19 @@ def test_remove_summary_incorrect_id(test_app_with_db: TestClient):
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
 
+    response = test_app_with_db.delete(f"{SUMMARIES_ENDPOINT}/0/")
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "loc": ["path", "id"],
+                "msg": "ensure this value is greater than 0",
+                "type": "value_error.number.not_gt",
+                "ctx": {"limit_value": 0},
+            }
+        ]
+    }
+
 
 def test_update_summary(test_app_with_db: TestClient):
     response: Response = test_app_with_db.post(
@@ -105,6 +137,22 @@ def test_update_summary_incorrect_id(test_app_with_db: TestClient):
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
+
+    response = test_app_with_db.put(
+        f"{SUMMARIES_ENDPOINT}/0/",
+        json={"url": "https://foo.bar", "summary": "updated!"},
+    )
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "loc": ["path", "id"],
+                "msg": "ensure this value is greater than 0",
+                "type": "value_error.number.not_gt",
+                "ctx": {"limit_value": 0},
+            }
+        ]
+    }
 
 
 def test_update_summary_invalid_json(test_app_with_db: TestClient):
@@ -143,3 +191,10 @@ def test_update_summary_invalid_keys(test_app_with_db: TestClient):
     )
 
     assert response.status_code == 422
+
+    response = test_app_with_db.put(
+        f"{SUMMARIES_ENDPOINT}/{summary_id}/",
+        json={"url": "invalid://url", "summary": "updated!"},
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"] == "URL scheme not permitted"
