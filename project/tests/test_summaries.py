@@ -143,11 +143,10 @@ def test_update_summary_invalid_keys(test_app_with_db: TestClient):
         json={"url": "https://foo.bar"}
     )
     summary_id = response.json()["id"]
-    
+
     response = test_app_with_db.put(
         f"{SUMMARIES_ENDPOINT}/{summary_id}/",
         json={"url": "https://new-foo.bar"}
     )
 
     assert response.status_code == 422
-
