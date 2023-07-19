@@ -21,17 +21,25 @@ jobs:
           GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
       - name: Pull image
         run: |
-          docker pull ${{ env.IMAGE }}:latest || true
+          docker pull ${{ env.IMAGE }}-builder:latest || true
+          docker pull ${{ env.IMAGE }}-final:latest || true
       - name: Build image
         run: |
           docker build \
-            --cache-from ${{ env.IMAGE }}:latest \
-            --tag ${{ env.IMAGE }}:latest \
+            --target builder \
+            --cache-from ${{ env.IMAGE }}-builder:latest \
+            --tag ${{ env.IMAGE }}-builder:latest \
+            --file ./project/Dockerfile.prod \
+            "./project"
+          docker build \
+            --cache-from ${{ env.IMAGE }}-final:latest \
+            --tag ${{ env.IMAGE }}-final:latest \
             --file ./project/Dockerfile.prod \
             "./project"
       - name: Push image
         run: |
-          docker push ${{ env.IMAGE }}:latest
+          docker push ${{ env.IMAGE }}-builder:latest
+          docker push ${{ env.IMAGE }}-final:latest
 
   test:
     name: Test Docker Image
@@ -48,12 +56,19 @@ jobs:
           GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
       - name: Pull image
         run: |
-          docker pull ${{ env.IMAGE }}:latest || true
+          docker pull ${{ env.IMAGE }}-builder:latest || true
+          docker pull ${{ env.IMAGE }}-final:latest || true
       - name: Build image
         run: |
           docker build \
-            --cache-from ${{ env.IMAGE }}:latest \
-            --tag ${{ env.IMAGE }}:latest \
+            --target builder \
+            --cache-from ${{ env.IMAGE }}-builder:latest \
+            --tag ${{ env.IMAGE }}-builder:latest \
+            --file ./project/Dockerfile.prod \
+            "./project"
+          docker build \
+            --cache-from ${{ env.IMAGE }}-final:latest \
+            --tag ${{ env.IMAGE }}-final:latest \
             --file ./project/Dockerfile.prod \
             "./project"
       - name: Run container
@@ -66,7 +81,9 @@ jobs:
             -e DATABASE_URL=sqlite://sqlite.db \
             -e DATABASE_TEST_URL=sqlite://sqlite.db \
             -p 5003:8765 \
-            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}-final:latest
+      - name: Install requirements
+        run: docker exec fastapi-tdd pip install black==23.1.0 flake8==6.0.0 isort==5.12.0 pytest==7.2.2
       - name: Pytest
         run: docker exec fastapi-tdd python -m pytest .
       - name: Flake8
@@ -94,11 +111,19 @@ jobs:
           GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
       - name: Pull image
         run: |
-          docker pull ${{ env.IMAGE }}:latest || true
+          docker pull ${{ env.IMAGE }}-builder:latest || true
+          docker pull ${{ env.IMAGE }}-final:latest || true
       - name: Build image
         run: |
           docker build \
-            --cache-from ${{ env.IMAGE }}:latest \
+            --target builder \
+            --cache-from ${{ env.IMAGE }}-builder:latest \
+            --tag ${{ env.IMAGE }}-builder:latest \
+            --file ./project/Dockerfile.prod \
+            "./project"
+          docker build \
+            --cache-from ${{ env.IMAGE }}-final:latest \
+            --tag ${{ env.IMAGE }}:latest \
             --tag ${{ env.HEROKU_REGISTRY_IMAGE }}:latest \
             --file ./project/Dockerfile.prod \
             "./project"
@@ -107,7 +132,7 @@ jobs:
         env:
           HEROKU_AUTH_TOKEN: ${{ secrets.HEROKU_AUTH_TOKEN }}
       - name: Push to the registry
-        run: docker push ${{ env.HEROKU_REGISTRY_IMAGE }}
+        run: docker push ${{ env.HEROKU_REGISTRY_IMAGE }}:latest
       - name: Set environment variables
         run: |
           echo "HEROKU_REGISTRY_IMAGE=${{ env.HEROKU_REGISTRY_IMAGE }}" >> $GITHUB_ENV
