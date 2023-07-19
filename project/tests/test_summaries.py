@@ -2,10 +2,17 @@ import pytest
 from fastapi import Response
 from fastapi.testclient import TestClient
 
+from app.api import summaries
+
 SUMMARIES_ENDPOINT = "/summaries"
 
 
-def test_create_summary(test_app_with_db: TestClient):
+def test_create_summary(test_app_with_db: TestClient, monkeypatch):
+    def mock_generate_summary(summary_id, url):
+        return None
+
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
     response: Response = test_app_with_db.post(
         SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )
@@ -34,7 +41,12 @@ def test_create_summary_invalid_json(
     assert response.json()["detail"][0]["msg"] == "URL scheme not permitted"
 
 
-def test_read_summary(test_app_with_db: TestClient):
+def test_read_summary(test_app_with_db: TestClient, monkeypatch):
+    def mock_generate_summary(summary_id, url):
+        return None
+
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
     response: Response = test_app_with_db.post(
         SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )
@@ -46,7 +58,7 @@ def test_read_summary(test_app_with_db: TestClient):
     assert response.status_code == 200
     assert response_dict["id"] == summary_id
     assert response_dict["url"] == "https://foo.bar"
-    assert response_dict["summary"]
+    assert response_dict["summary"] == ""
     assert response_dict["created_at"]
 
 
@@ -69,7 +81,12 @@ def test_read_summary_incorrect_id(test_app_with_db: TestClient):
     }
 
 
-def test_real_all_summaries(test_app_with_db: TestClient):
+def test_real_all_summaries(test_app_with_db: TestClient, monkeypatch):
+    def mock_generate_summary(summary_id, url):
+        return None
+
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
     response: Response = test_app_with_db.post(
         SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )
@@ -82,7 +99,12 @@ def test_real_all_summaries(test_app_with_db: TestClient):
     assert len(list(filter(lambda d: d["id"] == summary_id, response_list))) == 1
 
 
-def test_remove_summary(test_app_with_db: TestClient):
+def test_remove_summary(test_app_with_db: TestClient, monkeypatch):
+    def mock_generate_summary(summary_id, url):
+        return None
+
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
     response: Response = test_app_with_db.post(
         SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )
@@ -112,7 +134,12 @@ def test_remove_summary_incorrect_id(test_app_with_db: TestClient):
     }
 
 
-def test_update_summary(test_app_with_db: TestClient):
+def test_update_summary(test_app_with_db: TestClient, monkeypatch):
+    def mock_generate_summary(summary_id, url):
+        return None
+
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
     response: Response = test_app_with_db.post(
         SUMMARIES_ENDPOINT, json={"url": "https://foo.bar"}
     )

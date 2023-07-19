@@ -5,7 +5,7 @@ from app.models.tortoise import TextSummary
 async def post(payload: SummaryPayloadSchema) -> int:
     summary = TextSummary(
         url=payload.url,
-        summary="dummy summary",
+        summary="",
     )
     await summary.save()
     return summary.id
@@ -28,7 +28,7 @@ async def delete(id: int) -> int:
     return deleted_summary
 
 
-async def update(id: int, payload: SummaryPayloadSchema) -> dict | None:
+async def put(id: int, payload: SummaryPayloadSchema) -> dict | None:
     summary = await TextSummary.filter(id=id).update(
         url=payload.url, summary=payload.summary
     )
